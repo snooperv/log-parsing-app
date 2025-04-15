@@ -21,8 +21,8 @@
 			"helpers": [
 				"helpers"
 			],
-			"store": [
-				"store"
+			"styles": [
+				"styles"
 			],
 			"types": [
 				"types"
@@ -32,10 +32,8 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "ES6",
+		"target": "ESNext",
 		"typeRoots": [
-			"@testing-library/jest-dom",
-			"jest",
 			"node_modules/@types",
 			"src/types.d.ts"
 		]

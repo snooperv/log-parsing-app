@@ -1,10 +1,4 @@
-import {IJsApi} from '@nsmp/js-api';
-
 export declare global {
-	interface Window {
-		jsApi: IJsApi
-	}
-
 	module '*.gif'
 	module '*.png'
 	module '*.svg'

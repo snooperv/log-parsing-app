@@ -1,0 +1,58 @@
+:local {
+	.appContainer {
+		padding: 0 24px;
+
+		.filters {
+			align-items: center;
+			display: flex;
+			gap: 12px;
+			margin-bottom: 16px;
+
+			.levelFilter {
+				width: 200px;
+			}
+
+			.keywordFilter {
+				width: 240px;
+			}
+		}
+
+		.keywords {
+			margin-bottom: 16px;
+		}
+
+		.table {
+			border: 1px solid #EEE;
+			border-radius: 8px;
+
+			.header {
+				align-items: center;
+				background: #FAFAFA;
+				display: flex;
+				font-weight: 600;
+				height: 100%;
+				padding: 8px;
+
+				.cell {
+					flex-shrink: 0;
+				}
+
+				.timeCell {
+					width: 180px;
+				}
+
+				.levelCell {
+					width: 80px;
+				}
+
+				.threadCell {
+					width: 240px;
+				}
+
+				.messageCell {
+					flex: 1;
+				}
+			}
+		}
+	}
+}

@@ -6,8 +6,7 @@ module.exports = {
 		'assets': resolve(src, 'assets'),
 		'components': resolve(src, 'components'),
 		'helpers': resolve(src, 'helpers'),
-		'mock': resolve(src, 'mock'),
-		'store': resolve(src, 'store'),
+		'styles': resolve(src, 'styles'),
 		'types': resolve(src, 'types')
 	},
 	extensions: ['.ts', '.tsx', '.js', 'jsx']

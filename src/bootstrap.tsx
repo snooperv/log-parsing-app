@@ -1,4 +1,5 @@
-import App from './components/App';
+import 'styles/global.less';
+import App from 'components/App';
 import {createRoot} from 'react-dom/client';
 
 (async function () {

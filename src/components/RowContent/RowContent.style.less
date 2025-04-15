@@ -1,0 +1,45 @@
+:local {
+	.row {
+		border-bottom: 1px solid #F0F0F0;
+		box-sizing: border-box;
+		overflow: hidden;
+		padding: 0 8px;
+
+		.rowContent {
+			align-items: center;
+			display: flex;
+
+			.time {
+				flex-shrink: 0;
+				padding: 8px;
+				width: 180px;
+			}
+
+			.level {
+				flex-shrink: 0;
+				padding: 8px;
+				width: 80px;
+			}
+
+			.thread {
+				flex-shrink: 0;
+				padding: 8px;
+				width: 240px;
+				word-break: break-word;
+			}
+
+			.message {
+				flex: 1;
+				padding: 8px;
+			}
+		}
+
+		.stacktrace {
+			font-family: monospace;
+			font-size: 12px;
+			padding: 8px 0;
+			white-space: pre-wrap;
+			word-break: break-word;
+		}
+	}
+}
