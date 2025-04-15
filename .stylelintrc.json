@@ -1,0 +1,34 @@
+{
+	"extends": [
+		"stylelint-config-standard",
+		"stylelint-plugin-stylus/standard"
+	],
+	"ignoreFiles": [
+		"src/assets/libraries/**/*.css"
+	],
+	"overrides": [
+		{
+			"files": ["**/*.less"],
+			"customSyntax": "postcss-less"
+		}
+	],
+	"plugins": [
+		"stylelint-order"
+	],
+	"rules": {
+		"order/properties-alphabetical-order": true,
+		"selector-pseudo-class-no-unknown": [
+			true,
+			{
+				"ignorePseudoClasses": [
+					"global",
+					"local"
+				]
+			}
+		],
+		"no-descending-specificity": null,
+		"selector-class-pattern": "([A-Za-z0-9]+)+(__[a-z0-9]+([A-Z][a-z0-9]+)*)?(_([A-Za-z0-9]+)*)?",
+		"stylus/color-hex-case": "upper",
+		"stylus/indentation": "tab"
+	}
+}
