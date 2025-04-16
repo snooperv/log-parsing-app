@@ -1,6 +1,8 @@
+import 'dayjs/locale/ru';
 import {
 	App as AntApp,
 	Button,
+	DatePicker,
 	Input,
 	Radio,
 	Select,
@@ -13,12 +15,15 @@ import {
 } from 'antd';
 import {CHUNK_SIZE, LOG_LINE_REGEX} from './constants';
 import cn from 'classnames';
+import dayjs, {Dayjs} from 'dayjs';
 import {filterByKeywords} from './helpers';
 import {LogEntry} from './App.types';
 import {PlusOutlined, UploadOutlined} from '@ant-design/icons';
-import React, {useMemo, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import renderRowContent from 'components/RowContent';
+import ruLocale from 'antd/locale/ru_RU';
 import styles from './App.style.less';
+import utc from 'dayjs/plugin/utc';
 import {VariableSizeList as List} from 'react-window';
 
 const App = () => {
@@ -27,6 +32,7 @@ const App = () => {
 	const {Title} = Typography;
 	const {modal} = AntApp.useApp();
 
+	const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
 	const [inputValue, setInputValue] = useState<string>('');
 	const [keywords, setKeywords] = useState<string[]>([]);
 	const [levelFilter, setLevelFilter] = useState<string | null>(null);
@@ -42,11 +48,26 @@ const App = () => {
 
 	const parsedLogs: LogEntry[] = [];
 
+	useEffect(() => {
+		dayjs.extend(utc);
+		dayjs.locale('ru');
+	}, []);
+
 	const filteredLogs = useMemo(
-		() => logs.filter(log =>
-			(!levelFilter || log.level === levelFilter)
-			&& (keywords.length === 0 || filterByKeywords(log.message, keywords, searchMode))),
-		[keywords, levelFilter, logs, searchMode]
+		() => logs.filter(log => {
+			const timestamp = log.timestamp;
+			const logDate = dayjs(timestamp, 'DD MMM YYYY HH:mm:ss,SSS');
+
+			const dateInRange = !dateRange[0] || !dateRange[1]
+				|| (logDate.isAfter(dateRange[0]) && logDate.isBefore(dateRange[1]));
+
+			return (
+				(!levelFilter || log.level === levelFilter)
+				&& (keywords.length === 0 || filterByKeywords(log.message, keywords, searchMode))
+				&& dateInRange
+			);
+		}),
+		[keywords, levelFilter, logs, searchMode, dateRange]
 	);
 
 	const getRowHeight = (index: number) => {
@@ -215,6 +236,13 @@ const App = () => {
 							<Option value="TRACE">TRACE</Option>
 							<Option value="WARN">WARN</Option>
 						</Select>
+						<DatePicker.RangePicker
+							className={styles.datePicker}
+							format="DD MMM. YYYY HH:mm:ss"
+							locale={ruLocale.DatePicker}
+							onChange={dates => setDateRange(dates as [Dayjs, Dayjs] || [null, null])}
+							showTime
+						/>
 						<Input
 							className={styles.keywordFilter}
 							onChange={e => setInputValue(e.target.value)}
