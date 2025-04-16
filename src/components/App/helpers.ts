@@ -1,4 +1,8 @@
 export const filterByKeywords = (text: string, keys: string[], mode: 'AND' | 'OR') => {
+	if (!keys.length) {
+		return true;
+	}
+
 	const lowered = text.toLowerCase();
 
 	if (mode === 'AND') {

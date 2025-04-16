@@ -2,6 +2,7 @@ import 'dayjs/locale/ru';
 import {
 	App as AntApp,
 	Button,
+	Checkbox,
 	DatePicker,
 	Input,
 	Radio,
@@ -33,6 +34,7 @@ const App = () => {
 	const {modal} = AntApp.useApp();
 
 	const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+	const [includeStackTraces, setIncludeStackTraces] = useState<boolean>(false);
 	const [inputValue, setInputValue] = useState<string>('');
 	const [keywords, setKeywords] = useState<string[]>([]);
 	const [levelFilter, setLevelFilter] = useState<string | null>(null);
@@ -57,17 +59,19 @@ const App = () => {
 		() => logs.filter(log => {
 			const timestamp = log.timestamp;
 			const logDate = dayjs(timestamp, 'DD MMM YYYY HH:mm:ss,SSS');
+			const dateInRange = !dateRange[0] || !dateRange[1] || (logDate.isAfter(dateRange[0]) && logDate.isBefore(dateRange[1]));
+			const levelMatches = !levelFilter || log.level === levelFilter;
+			let messageAndStack = log.message;
 
-			const dateInRange = !dateRange[0] || !dateRange[1]
-				|| (logDate.isAfter(dateRange[0]) && logDate.isBefore(dateRange[1]));
+			if (includeStackTraces && log.stacktrace) {
+				messageAndStack += '\n' + log.stacktrace.join('\n');
+			}
 
-			return (
-				(!levelFilter || log.level === levelFilter)
-				&& (keywords.length === 0 || filterByKeywords(log.message, keywords, searchMode))
-				&& dateInRange
-			);
+			const keywordsMatch = keywords.length === 0 || filterByKeywords(messageAndStack, keywords, searchMode);
+
+			return dateInRange && levelMatches && keywordsMatch;
 		}),
-		[keywords, levelFilter, logs, searchMode, dateRange]
+		[logs, dateRange, levelFilter, includeStackTraces, keywords, searchMode]
 	);
 
 	const getRowHeight = (index: number) => {
@@ -260,6 +264,13 @@ const App = () => {
 							<Radio.Button value="AND">И</Radio.Button>
 							<Radio.Button value="OR">ИЛИ</Radio.Button>
 						</Radio.Group>
+						<Checkbox
+							checked={includeStackTraces}
+							className={styles.stackTracesCheckbox}
+							onChange={e => setIncludeStackTraces(e.target.checked)}
+						>
+							Искать в stacktrace
+						</Checkbox>
 					</div>
 					<Space className={styles.keywords} wrap>
 						{keywords.map(kw => <Tag closable key={kw} onClose={() => handleKeywordRemove(kw)}>{kw}</Tag>)}
