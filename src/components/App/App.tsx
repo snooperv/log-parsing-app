@@ -16,14 +16,18 @@ import {
 } from 'antd';
 import {CHUNK_SIZE, LOG_LINE_REGEX} from './constants';
 import cn from 'classnames';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import dayjs, {Dayjs} from 'dayjs';
 import {filterByKeywords} from './helpers';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import {LogEntry} from './App.types';
 import {PlusOutlined, UploadOutlined} from '@ant-design/icons';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import renderRowContent from 'components/RowContent';
 import ruLocale from 'antd/locale/ru_RU';
 import styles from './App.style.less';
+import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import {VariableSizeList as List} from 'react-window';
 
@@ -50,16 +54,101 @@ const App = () => {
 
 	const parsedLogs: LogEntry[] = [];
 
+	const convertRussianMonth = (timestamp: string): string => {
+		const monthMap: {[key: string]: string} = {
+			'авг.': 'Aug',
+			'апр.': 'Apr',
+			'дек.': 'Dec',
+			'июл.': 'Jul',
+			'июн.': 'Jun',
+			'мар.': 'Mar',
+			'мая': 'May',
+			'ноя.': 'Nov',
+			'окт.': 'Oct',
+			'сен.': 'Sep',
+			'фев.': 'Feb',
+			'янв.': 'Jan'
+		};
+
+		let converted = timestamp;
+
+		for (const [ru, en] of Object.entries(monthMap)) {
+			converted = converted.replace(ru, en);
+		}
+
+		return converted;
+	};
+
+	const getMonthNumber = (monthName: string): string => {
+		const monthNumbers: {[key: string]: string} = {
+			'Apr': '04',
+			'Aug': '08',
+			'Dec': '12',
+			'Feb': '02',
+			'Jan': '01',
+			'Jul': '07',
+			'Jun': '06',
+			'Mar': '03',
+			'May': '05',
+			'Nov': '11',
+			'Oct': '10',
+			'Sep': '09'
+		};
+		return monthNumbers[monthName] || '01';
+	};
+
 	useEffect(() => {
 		dayjs.extend(utc);
+		dayjs.extend(timezone);
+		dayjs.extend(customParseFormat);
+		dayjs.extend(isSameOrAfter);
+		dayjs.extend(isSameOrBefore);
 		dayjs.locale('ru');
 	}, []);
 
 	const filteredLogs = useMemo(
 		() => logs.filter(log => {
 			const timestamp = log.timestamp;
-			const logDate = dayjs(timestamp, 'DD MMM YYYY HH:mm:ss,SSS');
-			const dateInRange = !dateRange[0] || !dateRange[1] || (logDate.isAfter(dateRange[0]) && logDate.isBefore(dateRange[1]));
+			const convertedTimestamp = convertRussianMonth(timestamp);
+			let logDate;
+
+			try {
+				const match = convertedTimestamp.match(/(\d{2})\s+(\w{3})\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2}),(\d{3})/);
+
+				if (match) {
+					const [, day, month, year, hour, minute, second, ms] = match;
+					const jsDate = new Date(
+						parseInt(year),
+						parseInt(getMonthNumber(month)) - 1,
+						parseInt(day),
+						parseInt(hour),
+						parseInt(minute),
+						parseInt(second),
+						parseInt(ms)
+					);
+
+					logDate = dayjs(jsDate);
+				} else {
+					const simplified = convertedTimestamp
+						.replace(/,\d{3}.*$/, '')
+						.trim();
+
+					logDate = dayjs(simplified, 'DD MMM YYYY HH:mm:ss');
+				}
+
+				if (!logDate.isValid()) {
+					console.warn('Failed to parse date:', convertedTimestamp);
+					logDate = dayjs(); // fallback to current date
+				}
+			} catch (error) {
+				console.warn('Error parsing date:', timestamp, error);
+				logDate = dayjs(); // fallback to current date
+			}
+
+			const dateInRange = !dateRange[0] || !dateRange[1]
+				|| (logDate.isValid()
+				&& logDate.isSameOrAfter(dateRange[0], 'minute')
+				&& logDate.isSameOrBefore(dateRange[1], 'minute'));
 			const levelMatches = !levelFilter || log.level === levelFilter;
 			let messageAndStack = log.message;
 
@@ -244,7 +333,9 @@ const App = () => {
 							className={styles.datePicker}
 							format="DD MMM. YYYY HH:mm:ss"
 							locale={ruLocale.DatePicker}
-							onChange={dates => setDateRange(dates as [Dayjs, Dayjs] || [null, null])}
+							onChange={dates => {
+								setDateRange(dates || [null, null]);
+							}}
 							showTime
 						/>
 						<Input
